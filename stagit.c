@@ -18,6 +18,9 @@
 
 #define LEN(s)    (sizeof(s)/sizeof(*s))
 
+/* #define DATE_SHORT_FMT	"%Y-%m-%d %H:%M" */
+#define DATE_SHORT_FMT	"%H:%M %d-%m-%Y"
+
 struct deltainfo {
 	git_patch *patch;
 
@@ -492,7 +495,7 @@ printtimeshort(FILE *fp, const git_time *intime)
 	t = (time_t)intime->time;
 	if (!(intm = gmtime(&t)))
 		return;
-	strftime(out, sizeof(out), "%Y-%m-%d %H:%M", intm);
+	strftime(out, sizeof(out), DATE_SHORT_FMT, intm);
 	fputs(out, fp);
 }
 
@@ -520,13 +523,14 @@ writeheader(FILE *fp, const char *title)
 	fprintf(fp, " Atom Feed (tags)\" href=\"%stags.xml\" />\n", relpath);
 	fprintf(fp, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%sstyle.css\" />\n", relpath);
 	fputs("</head>\n<body>\n<table><tr><td>", fp);
-	fprintf(fp, "<a href=\"../%s\"><img src=\"%slogo.png\" alt=\"\" width=\"32\" height=\"32\" /></a>",
+	fprintf(fp, "<a href=\"https://git.kloeckner.com.ar\"><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></a>",
 	        relpath, relpath);
-	fputs("</td><td><h1>", fp);
+	fputs("</td><td><h1 id=\"repo-name\">", fp);
 	xmlencode(fp, strippedname, strlen(strippedname));
 	fputs("</h1><span class=\"desc\">", fp);
 	xmlencode(fp, description, strlen(description));
-	fputs("</span></td></tr>", fp);
+	fputs("</span>", fp);
+
 	if (cloneurl[0]) {
 		fputs("<tr class=\"url\"><td></td><td>git clone <a href=\"", fp);
 		xmlencode(fp, cloneurl, strlen(cloneurl)); /* not percent-encoded */
@@ -534,20 +538,21 @@ writeheader(FILE *fp, const char *title)
 		xmlencode(fp, cloneurl, strlen(cloneurl));
 		fputs("</a></td></tr>", fp);
 	}
-	fputs("<tr><td></td><td>\n", fp);
-	fprintf(fp, "<a href=\"%slog.html\">Log</a> | ", relpath);
-	fprintf(fp, "<a href=\"%sfiles.html\">Files</a> | ", relpath);
+
+	fputs("<table id=\"repo-top-buttons\"><tr><td>\n", fp);
+	fprintf(fp, "<a href=\"%slog.html\">Log</a>  ", relpath);
+	fprintf(fp, "<a href=\"%sfiles.html\">Files</a>  ", relpath);
 	fprintf(fp, "<a href=\"%srefs.html\">Refs</a>", relpath);
 	if (submodules)
-		fprintf(fp, " | <a href=\"%sfile/%s.html\">Submodules</a>",
+		fprintf(fp, "  <a href=\"%sfile/%s.html\">Submodules</a>",
 		        relpath, submodules);
 	if (readme)
-		fprintf(fp, " | <a href=\"%sfile/%s.html\">README</a>",
+		fprintf(fp, "  <a href=\"%sfile/%s.html\">README</a>",
 		        relpath, readme);
 	if (license)
-		fprintf(fp, " | <a href=\"%sfile/%s.html\">LICENSE</a>",
+		fprintf(fp, "  <a href=\"%sfile/%s.html\">LICENSE</a>",
 		        relpath, license);
-	fputs("</td></tr></table>\n<hr/>\n<div id=\"content\">\n", fp);
+	fputs("</td></tr></table></td></tr></table>\n<hr/>\n<div id=\"content\">\n", fp);
 }
 
 void
@@ -560,7 +565,7 @@ size_t
 writeblobhtml(FILE *fp, const git_blob *blob)
 {
 	size_t n = 0, i, len, prev;
-	const char *nfmt = "<a href=\"#l%zu\" class=\"line\" id=\"l%zu\">%7zu</a> ";
+	const char *nfmt = "<a href=\"#l%zu\" class=\"line\" id=\"l%zu\">%4zu</a> ";
 	const char *s = git_blob_rawcontent(blob);
 
 	len = git_blob_rawsize(blob);
@@ -687,7 +692,7 @@ printshowfile(FILE *fp, struct commitinfo *ci)
 		fwrite(&linestr[add], 1, del, fp);
 		fputs("</span></td></tr>\n", fp);
 	}
-	fprintf(fp, "</table></pre><pre>%zu file%s changed, %zu insertion%s(+), %zu deletion%s(-)\n",
+	fprintf(fp, "</table></pre><pre id=\"commit-diff\">%zu file%s changed, %zu insertion%s(+), %zu deletion%s(-)\n",
 		ci->filecount, ci->filecount == 1 ? "" : "s",
 	        ci->addcount,  ci->addcount  == 1 ? "" : "s",
 	        ci->delcount,  ci->delcount  == 1 ? "" : "s");
@@ -745,23 +750,30 @@ printshowfile(FILE *fp, struct commitinfo *ci)
 void
 writelogline(FILE *fp, struct commitinfo *ci)
 {
-	fputs("<tr><td>", fp);
+	/* fputs("<tr><td>", fp); */
+
+	/* make entire table row clickable */
+	fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location.href=\'commit/%s.html'\">", ci->oid);
+	printf("%s\n", ci->oid);
+
+	fputs("<td id=\"log-date\">", fp);
 	if (ci->author)
 		printtimeshort(fp, &(ci->author->when));
-	fputs("</td><td>", fp);
+
+	fputs("</td><td id=\"log-summary\">", fp);
 	if (ci->summary) {
 		fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 		xmlencode(fp, ci->summary, strlen(ci->summary));
 		fputs("</a>", fp);
 	}
-	fputs("</td><td>", fp);
+	fputs("</td><td id=\"log-author\">", fp);
 	if (ci->author)
 		xmlencode(fp, ci->author->name, strlen(ci->author->name));
-	fputs("</td><td class=\"num\" align=\"right\">", fp);
+	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
 	fprintf(fp, "%zu", ci->filecount);
-	fputs("</td><td class=\"num\" align=\"right\">", fp);
+	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
 	fprintf(fp, "+%zu", ci->addcount);
-	fputs("</td><td class=\"num\" align=\"right\">", fp);
+	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
 	fprintf(fp, "-%zu", ci->delcount);
 	fputs("</td></tr>\n", fp);
 }
@@ -820,7 +832,7 @@ writelog(FILE *fp, const git_oid *oid)
 			relpath = "../";
 			fpfile = efopen(path, "w");
 			writeheader(fpfile, ci->summary);
-			fputs("<pre>", fpfile);
+			fputs("<pre id=\"commit-summary\">", fpfile);
 			printshowfile(fpfile, ci);
 			fputs("</pre>\n", fpfile);
 			writefooter(fpfile);
@@ -1072,13 +1084,23 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			filesize = git_blob_rawsize((git_blob *)obj);
 			lc = writeblob(obj, filepath, entryname, filesize);
 
-			fputs("<tr><td>", fp);
+			fputs("<tr><td id=\"file-mode\">", fp);
+
+			/* fputs("<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\ */
+			/* 		window.location='",fp); */
+
+			/* make entire table row clickable */
+			fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
+					window.location.href=\'%s", relpath);
+			percentencode(fp, filepath, strlen(filepath));
+			fputs("\'\"><td id=\"file-mode\">", fp);
+
 			fputs(filemode(git_tree_entry_filemode(entry)), fp);
-			fprintf(fp, "</td><td><a href=\"%s", relpath);
+			fprintf(fp, "</td><td id=\"file-name\"><a href=\"%s", relpath);
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\">", fp);
 			xmlencode(fp, entrypath, strlen(entrypath));
-			fputs("</a></td><td class=\"num\" align=\"right\">", fp);
+			fputs("</a></td><td id=\"file-size\" class=\"num\" align=\"right\">", fp);
 			if (lc > 0)
 				fprintf(fp, "%zuL", lc);
 			else
@@ -1087,13 +1109,13 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			git_object_free(obj);
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
 			/* commit object in tree is a submodule */
-			fprintf(fp, "<tr><td>m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
+			fprintf(fp, "<tr><td id=\"file-mode\">m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
 				relpath);
 			xmlencode(fp, entrypath, strlen(entrypath));
 			fputs("</a> @ ", fp);
 			git_oid_tostr(oid, sizeof(oid), git_tree_entry_id(entry));
 			xmlencode(fp, oid, strlen(oid));
-			fputs("</td><td class=\"num\" align=\"right\"></td></tr>\n", fp);
+			fputs("</td><td id=\"file-size\" class=\"num\" align=\"right\"></td></tr>\n", fp);
 		}
 	}
 
@@ -1108,8 +1130,8 @@ writefiles(FILE *fp, const git_oid *id)
 	int ret = -1;
 
 	fputs("<table id=\"files\"><thead>\n<tr>"
-	      "<td><b>Mode</b></td><td><b>Name</b></td>"
-	      "<td class=\"num\" align=\"right\"><b>Size</b></td>"
+	      "<td id=\"file-mode\"><b>Mode</b></td><td id=\"file-name\"><b>Name</b></td>"
+	      "<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
 	      "</tr>\n</thead><tbody>\n", fp);
 
 	if (!git_commit_lookup(&commit, repo, id) &&
@@ -1294,9 +1316,11 @@ main(int argc, char *argv[])
 
 	/* read url or .git/url */
 	joinpath(path, sizeof(path), repodir, "url");
+	printf("%s\n", path);
 	if (!(fpread = fopen(path, "r"))) {
 		joinpath(path, sizeof(path), repodir, ".git/url");
 		fpread = fopen(path, "r");
+		printf("Hello, world!\n");
 	}
 	if (fpread) {
 		if (!fgets(cloneurl, sizeof(cloneurl), fpread))
@@ -1305,6 +1329,7 @@ main(int argc, char *argv[])
 		fclose(fpread);
 		cloneurl[strcspn(cloneurl, "\n")] = '\0';
 	}
+	printf("cloneurl: %s\n", cloneurl);
 
 	/* check LICENSE */
 	for (i = 0; i < LEN(licensefiles) && !license; i++) {
@@ -1332,11 +1357,13 @@ main(int argc, char *argv[])
 	relpath = "";
 	mkdir("commit", S_IRWXU | S_IRWXG | S_IRWXO);
 	writeheader(fp, "Log");
-	fputs("<table id=\"log\"><thead>\n<tr><td><b>Date</b></td>"
-	      "<td><b>Commit message</b></td>"
-	      "<td><b>Author</b></td><td class=\"num\" align=\"right\"><b>Files</b></td>"
-	      "<td class=\"num\" align=\"right\"><b>+</b></td>"
-	      "<td class=\"num\" align=\"right\"><b>-</b></td></tr>\n</thead><tbody>\n", fp);
+	fputs("<table id=\"log\"><thead>\n<tr>"
+		  "<td id=\"log-date\"><b>Date</b></td>"
+	      "<td id=\"log-summary\"><b>Commit message</b></td>"
+	      "<td id=\"log-author\"><b>Author</b></td>"
+		  "<td id=\"log-files\" lass=\"num\" align=\"right\"><b>Files</b></td>"
+	      "<td id=\"log-files\" lass=\"num\" align=\"right\"><b>+</b></td>"
+	      "<td id=\"log-files\" lass=\"num\" align=\"right\"><b>-</b></td></tr>\n</thead><tbody>\n", fp);
 
 	if (cachefile && head) {
 		/* read from cache file (does not need to exist) */

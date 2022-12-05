@@ -8,6 +8,9 @@
 
 #include <git2.h>
 
+/* #define LAST_COMMIT_DATE_FORMAT "%Y-%m-%d %H:%M" */
+#define LAST_COMMIT_DATE_FORMAT "%H:%M %d-%m-%Y"
+
 static git_repository *repo;
 
 static const char *relpath = "";
@@ -88,7 +91,7 @@ printtimeshort(FILE *fp, const git_time *intime)
 	t = (time_t)intime->time;
 	if (!(intm = gmtime(&t)))
 		return;
-	strftime(out, sizeof(out), "%Y-%m-%d %H:%M", intm);
+	strftime(out, sizeof(out), LAST_COMMIT_DATE_FORMAT, intm);
 	fputs(out, fp);
 }
 
@@ -104,14 +107,15 @@ writeheader(FILE *fp)
 	fprintf(fp, "</title>\n<link rel=\"icon\" type=\"image/png\" href=\"%sfavicon.png\" />\n", relpath);
 	fprintf(fp, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%sstyle.css\" />\n", relpath);
 	fputs("</head>\n<body>\n", fp);
-	fprintf(fp, "<table>\n<tr><td><img src=\"%slogo.png\" alt=\"\" width=\"32\" height=\"32\" /></td>\n"
-	        "<td><span class=\"desc\">", relpath);
+	fprintf(fp, "<table>\n<tr><td><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></td>\n"
+	        "<td><h1 id=\"main-name\">", relpath);
 	xmlencode(fp, description, strlen(description));
-	fputs("</span></td></tr><tr><td></td><td>\n"
+	fputs("</h1>\n"
+		"<span class=\"main-desc\"><a href=\"https://kloeckner.com.ar/\">kloeckner.com.ar</a></span>"
 		"</td></tr>\n</table>\n<hr/>\n<div id=\"content\">\n"
-		"<table id=\"index\"><thead>\n"
-		"<tr><td><b>Name</b></td><td><b>Description</b></td><td><b>Owner</b></td>"
-		"<td><b>Last commit</b></td></tr>"
+		"<table id=\"index\"><thead id=\"legends\">\n"
+		"<tr><td id=\"name\"><b>Name</b></td><td id=\"description\"><b>Description</b></td><td id=\"owner\"><b>Owner</b></td>"
+		"<td id=\"last-commit\"><b>Last commit</b></td></tr>"
 		"</thead><tbody>\n", fp);
 }
 
@@ -120,6 +124,17 @@ writefooter(FILE *fp)
 {
 	fputs("</tbody>\n</table>\n</div>\n</body>\n</html>\n", fp);
 }
+
+/* void */
+/* writefooter(FILE *fp) */
+/* { */
+/* 	fputs("</tbody>\n</table>\n</div></body>\n", fp); */
+/* 	fputs("<hr><footer\">generated with \ */
+/* 			<a href=\"https://codemadness.org/stagit.html\">stagit</a>\ */
+/* 			</footer>\n", fp); */
+/* 	fputs("</html>\n", fp); */
+/* } */
+
 
 int
 writelog(FILE *fp)
@@ -149,15 +164,18 @@ writelog(FILE *fp)
 		if (!strcmp(p, ".git"))
 			*p = '\0';
 
-	fputs("<tr><td><a href=\"", fp);
+	fputs("<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
+			window.location='/",fp);
 	percentencode(fp, stripped_name, strlen(stripped_name));
-	fputs("/log.html\">", fp);
+	fputs("';\"><td id=\"name\"><a href=\"", fp);
+	percentencode(fp, stripped_name, strlen(stripped_name));
+	fputs("/files.html\">", fp);
 	xmlencode(fp, stripped_name, strlen(stripped_name));
-	fputs("</a></td><td>", fp);
+	fputs("</a></td><td id=\"description\">", fp);
 	xmlencode(fp, description, strlen(description));
-	fputs("</td><td>", fp);
+	fputs("</td><td id=\"owner\">", fp);
 	xmlencode(fp, owner, strlen(owner));
-	fputs("</td><td>", fp);
+	fputs("</td><td id=\"last-commit\">", fp);
 	if (author)
 		printtimeshort(fp, &(author->when));
 	fputs("</td></tr>", fp);
