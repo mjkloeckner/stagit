@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <git2.h>
+#include <md4c-html.h>
 
 #include "compat.h"
 
@@ -452,6 +453,20 @@ mkdirp(const char *path)
 	return 0;
 }
 
+int
+mkdirfile(const char *path)
+{
+	char *d;
+	char tmp[PATH_MAX];
+	if (strlcpy(tmp, path, sizeof(tmp)) >= sizeof(tmp))
+		errx(1, "path truncated: '%s'", path);
+	if (!(d = dirname(tmp)))
+		err(1, "dirname");
+	if (mkdirp(d))
+		return -1;
+	return 0;
+}
+
 void
 printtimez(FILE *fp, const git_time *intime)
 {
@@ -547,8 +562,7 @@ writeheader(FILE *fp, const char *title)
 		fprintf(fp, "  <a href=\"%sfile/%s.html\">Submodules</a>",
 		        relpath, submodules);
 	if (readme)
-		fprintf(fp, "  <a href=\"%sfile/%s.html\">README</a>",
-		        relpath, readme);
+		fprintf(fp, "  <a href=\"%sreadme.html\">README</a>", relpath);
 	if (license)
 		fprintf(fp, "  <a href=\"%sfile/%s.html\">LICENSE</a>",
 		        relpath, license);
@@ -958,25 +972,48 @@ writeatom(FILE *fp, int all)
 	return 0;
 }
 
-size_t
-writeblob(git_object *obj, const char *fpath, const char *filename, size_t filesize)
+void
+writeblobraw(const git_blob *blob, const char *fpath, const char *filename, git_off_t filesize)
 {
-	char tmp[PATH_MAX] = "", *d;
+	char tmp[PATH_MAX] = "";
 	const char *p;
 	size_t lc = 0;
 	FILE *fp;
 
+	mkdirfile(fpath);
+
 	if (strlcpy(tmp, fpath, sizeof(tmp)) >= sizeof(tmp))
 		errx(1, "path truncated: '%s'", fpath);
-	if (!(d = dirname(tmp)))
-		err(1, "dirname");
-	if (mkdirp(d))
-		return -1;
 
 	for (p = fpath, tmp[0] = '\0'; *p; p++) {
 		if (*p == '/' && strlcat(tmp, "../", sizeof(tmp)) >= sizeof(tmp))
 			errx(1, "path truncated: '../%s'", tmp);
 	}
+
+	fp = efopen(fpath, "w");
+	fwrite(git_blob_rawcontent(blob), (size_t)git_blob_rawsize(blob), 1, fp);
+	fclose(fp);
+}
+
+size_t
+writeblob(git_object *obj, const char *fpath, const char *rpath, const char *filename, size_t filesize)
+{
+	char tmp[PATH_MAX] = "";
+	const char *p, *oldrelpath;
+	int lc = 0;
+	FILE *fp;
+
+	mkdirfile(fpath);
+
+	if (strlcpy(tmp, fpath, sizeof(tmp)) >= sizeof(tmp))
+		errx(1, "path truncated: '%s'", fpath);
+
+	for (p = fpath, tmp[0] = '\0'; *p; p++) {
+		if (*p == '/' && strlcat(tmp, "../", sizeof(tmp)) >= sizeof(tmp))
+			errx(1, "path truncated: '../%s'", tmp);
+	}
+
+	oldrelpath = relpath;
 	relpath = tmp;
 
 	fp = efopen(fpath, "w");
@@ -984,7 +1021,7 @@ writeblob(git_object *obj, const char *fpath, const char *filename, size_t files
 	fputs("<p> ", fp);
 	xmlencode(fp, filename, strlen(filename));
 	fprintf(fp, " (%zuB)", filesize);
-	fputs("</p><hr/>", fp);
+	fprintf(fp, " - <a href=\"%s%s\">raw</a></p><hr/>", relpath, rpath);
 
 	if (git_blob_is_binary((git_blob *)obj))
 		fputs("<p>Binary file.</p>\n", fp);
@@ -995,7 +1032,7 @@ writeblob(git_object *obj, const char *fpath, const char *filename, size_t files
 	checkfileerror(fp, fpath, 'w');
 	fclose(fp);
 
-	relpath = "";
+	relpath = oldrelpath;
 
 	return lc;
 }
@@ -1047,10 +1084,51 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 {
 	const git_tree_entry *entry = NULL;
 	git_object *obj = NULL;
-	const char *entryname;
-	char filepath[PATH_MAX], entrypath[PATH_MAX], oid[8];
+	FILE *fp_subtree;
+	const char *entryname, *oldrelpath;
+	char filepath[PATH_MAX], rawpath[PATH_MAX], entrypath[PATH_MAX], tmp[PATH_MAX], tmp2[PATH_MAX], oid[8];
+	char* parent;
 	size_t count, i, lc, filesize;
-	int r, ret;
+	int r, rf, ret, is_obj_tree;
+
+	if (strlen(path) > 0) {
+		fputs("<h2>Directory: ", fp);
+		xmlencode(fp, path, strlen(path));
+		fputs("</h2>\n", fp);
+	}
+
+	fputs("<table id=\"files\"><thead>\n<tr>"
+			"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
+			"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
+			"</tr>\n</thead><tbody>\n", fp);
+
+	if (strlen(path) > 0) {
+		if (strlcpy(tmp, path, sizeof(tmp)) >= sizeof(tmp))
+			errx(1, "path truncated: '%s'", path);
+		parent = strrchr(tmp, '/');
+		if (parent == NULL)
+			parent = "files";
+		else {
+			*parent = '\0';
+			parent = strrchr(tmp, '/');
+			if (parent == NULL)
+				parent = tmp;
+			else
+				++parent;
+		}
+		/* fputs("<tr><td>d---------</td><td><a class=\"dir\" href=\"../", fp); */
+		/* xmlencode(fp, parent, strlen(parent)); */
+
+		fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location.href=\'../");
+		percentencode(fp, parent, strlen(parent));
+		fputs(".html\'\">", fp);
+
+		fputs("<td id=\"file-mode\">d---------</td><td><a class=\"dir\" href=\"../", fp);
+		xmlencode(fp, parent, strlen(parent));
+
+		/* fputs(".html\">..</a></td><td class=\"num\" align=\"right\"></td></tr>\n", fp); */
+		fputs(".html\">..</a></td><td class=\"num\" align=\"right\"></td></tr>\n", fp);
+	}
 
 	count = git_tree_entrycount(tree);
 	for (i = 0; i < count; i++) {
@@ -1063,27 +1141,48 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		         entrypath);
 		if (r < 0 || (size_t)r >= sizeof(filepath))
 			errx(1, "path truncated: 'file/%s.html'", entrypath);
+		rf = snprintf(rawpath, sizeof(rawpath), "raw/%s",
+		         entrypath);
+		if (rf < 0 || (size_t)rf >= sizeof(rawpath))
+			errx(1, "path truncated: 'raw/%s'", entrypath);
 
 		if (!git_tree_entry_to_object(&obj, repo, entry)) {
 			switch (git_object_type(obj)) {
 			case GIT_OBJ_BLOB:
+				is_obj_tree = 0;
+				filesize = git_blob_rawsize((git_blob *)obj);
+				lc = writeblob(obj, filepath, rawpath, entryname, filesize);
+				writeblobraw((git_blob *)obj, rawpath, entryname, filesize);
 				break;
 			case GIT_OBJ_TREE:
+				mkdirfile(filepath);
+
+				if (strlcpy(tmp, relpath, sizeof(tmp)) >= sizeof(tmp))
+					errx(1, "path truncated: '%s'", relpath);
+				if (strlcat(tmp, "../", sizeof(tmp)) >= sizeof(tmp))
+					errx(1, "path truncated: '../%s'", tmp);
+
+				oldrelpath = relpath;
+				relpath = tmp;
+				fp_subtree = efopen(filepath, "w");
+				strlcpy(tmp2, "Files - ", sizeof(tmp2));
+				if (strlcat(tmp2, entrypath, sizeof(tmp2)) >= sizeof(tmp2))
+					errx(1, "path truncated: '%s'", tmp2);
+				writeheader(fp_subtree, tmp2);
 				/* NOTE: recurses */
-				ret = writefilestree(fp, (git_tree *)obj,
+				ret = writefilestree(fp_subtree, (git_tree *)obj,
 				                     entrypath);
-				git_object_free(obj);
+				writefooter(fp_subtree);
+				relpath = oldrelpath;
+				lc = 0;
+				is_obj_tree = 1;
 				if (ret)
 					return ret;
-				continue;
+				break;
 			default:
 				git_object_free(obj);
 				continue;
 			}
-
-			filesize = git_blob_rawsize((git_blob *)obj);
-			lc = writeblob(obj, filepath, entryname, filesize);
-
 			fputs("<tr><td id=\"file-mode\">", fp);
 
 			/* fputs("<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\ */
@@ -1094,31 +1193,44 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 					window.location.href=\'%s", relpath);
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\'\"><td id=\"file-mode\">", fp);
-
 			fputs(filemode(git_tree_entry_filemode(entry)), fp);
-			fprintf(fp, "</td><td id=\"file-name\"><a href=\"%s", relpath);
+			fprintf(fp, "</td>");
+
+
+			if (git_object_type(obj) == GIT_OBJ_TREE)
+				fprintf(fp, "<td id=\"dir-name\"><a href=\"%s", relpath);
+			else
+				fprintf(fp, "<td id=\"file-name\"><a href=\"%s", relpath);
+				/* fputs("id=\"files-dir\" ", fp); */
+
+			/* fprintf(fp, "href=\"%s", relpath); */
+
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\">", fp);
-			xmlencode(fp, entrypath, strlen(entrypath));
+
+			xmlencode(fp, entryname, strlen(entryname));
+
 			fputs("</a></td><td id=\"file-size\" class=\"num\" align=\"right\">", fp);
+
 			if (lc > 0)
 				fprintf(fp, "%zuL", lc);
-			else
+			else if (!is_obj_tree)
 				fprintf(fp, "%zuB", filesize);
 			fputs("</td></tr>\n", fp);
 			git_object_free(obj);
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
 			/* commit object in tree is a submodule */
-			fprintf(fp, "<tr><td id=\"file-mode\">m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
+			fprintf(fp, "<tr><td>m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
 				relpath);
 			xmlencode(fp, entrypath, strlen(entrypath));
 			fputs("</a> @ ", fp);
 			git_oid_tostr(oid, sizeof(oid), git_tree_entry_id(entry));
 			xmlencode(fp, oid, strlen(oid));
-			fputs("</td><td id=\"file-size\" class=\"num\" align=\"right\"></td></tr>\n", fp);
+			fputs("</td><td class=\"num\" align=\"right\"></td></tr>\n", fp);
 		}
 	}
 
+	fputs("</tbody></table>", fp);
 	return 0;
 }
 
@@ -1129,16 +1241,9 @@ writefiles(FILE *fp, const git_oid *id)
 	git_commit *commit = NULL;
 	int ret = -1;
 
-	fputs("<table id=\"files\"><thead>\n<tr>"
-	      "<td id=\"file-mode\"><b>Mode</b></td><td id=\"file-name\"><b>Name</b></td>"
-	      "<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
-	      "</tr>\n</thead><tbody>\n", fp);
-
 	if (!git_commit_lookup(&commit, repo, id) &&
 	    !git_commit_tree(&tree, commit))
 		ret = writefilestree(fp, tree, "");
-
-	fputs("</tbody></table>", fp);
 
 	git_commit_free(commit);
 	git_tree_free(tree);
@@ -1211,6 +1316,12 @@ usage(char *argv0)
 	exit(1);
 }
 
+void
+process_output_md(const char* text, unsigned int size, void* fp)
+{
+	fprintf((FILE *)fp, "%.*s", size, text);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1221,7 +1332,7 @@ main(int argc, char *argv[])
 	char path[PATH_MAX], repodirabs[PATH_MAX + 1], *p;
 	char tmppath[64] = "cache.XXXXXXXXXXXX", buf[BUFSIZ];
 	size_t n;
-	int i, fd;
+	int i, fd, r;
 
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] != '-') {
@@ -1316,11 +1427,9 @@ main(int argc, char *argv[])
 
 	/* read url or .git/url */
 	joinpath(path, sizeof(path), repodir, "url");
-	printf("%s\n", path);
 	if (!(fpread = fopen(path, "r"))) {
 		joinpath(path, sizeof(path), repodir, ".git/url");
 		fpread = fopen(path, "r");
-		printf("Hello, world!\n");
 	}
 	if (fpread) {
 		if (!fgets(cloneurl, sizeof(cloneurl), fpread))
@@ -1329,7 +1438,6 @@ main(int argc, char *argv[])
 		fclose(fpread);
 		cloneurl[strcspn(cloneurl, "\n")] = '\0';
 	}
-	printf("cloneurl: %s\n", cloneurl);
 
 	/* check LICENSE */
 	for (i = 0; i < LEN(licensefiles) && !license; i++) {
@@ -1344,6 +1452,7 @@ main(int argc, char *argv[])
 		if (!git_revparse_single(&obj, repo, readmefiles[i]) &&
 		    git_object_type(obj) == GIT_OBJ_BLOB)
 			readme = readmefiles[i] + strlen("HEAD:");
+			r = i;
 		git_object_free(obj);
 	}
 
@@ -1351,6 +1460,29 @@ main(int argc, char *argv[])
 	    git_object_type(obj) == GIT_OBJ_BLOB)
 		submodules = ".gitmodules";
 	git_object_free(obj);
+
+	/* about page */
+	if (readme) {
+		fp = efopen("readme.html", "w");
+		writeheader(fp, "README");
+		git_revparse_single(&obj, repo, readmefiles[r]);
+		const char *s = git_blob_rawcontent((git_blob *)obj);
+		if (r == 1) {
+			git_off_t len = git_blob_rawsize((git_blob *)obj);
+			fputs("<div id=\"readme\">", fp);
+			if (md_html(s, len, process_output_md, fp, MD_FLAG_TABLES | MD_FLAG_TASKLISTS |
+			    MD_FLAG_PERMISSIVEEMAILAUTOLINKS | MD_FLAG_PERMISSIVEURLAUTOLINKS, 0))
+				err(1, "error parsing markdown");
+			fputs("</div>\n", fp);
+		} else {
+			fputs("<pre id=\"readme\">", fp);
+			xmlencode(fp, s, strlen(s));
+			fputs("</pre>\n", fp);
+		}
+		git_object_free(obj);
+		writefooter(fp);
+		fclose(fp);
+	}
 
 	/* log for HEAD */
 	fp = efopen("log.html", "w");
