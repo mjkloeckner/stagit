@@ -5,8 +5,12 @@ Fork of (stagit)[https://git.2f30.org/stagit/] a static git page generator.
 
 It generates static HTML pages for a git repository.
 
-This fork adds css id selectors to elements on the generated html page, this
-adds the posibility to customize them with an external css file
+This fork adds css ids selectors to elements on the generated html page, this
+adds the posibility to customize those elements with an external css file
+
+Also makes rows in tables clickable so its easier to navigate both in desktop
+and mobile
+
 
 Usage
 -----
