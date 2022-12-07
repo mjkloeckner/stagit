@@ -546,15 +546,9 @@ writeheader(FILE *fp, const char *title)
 	xmlencode(fp, description, strlen(description));
 	fputs("</span>", fp);
 
-	if (cloneurl[0]) {
-		fputs("<tr class=\"url\"><td></td><td>git clone <a href=\"", fp);
-		xmlencode(fp, cloneurl, strlen(cloneurl)); /* not percent-encoded */
-		fputs("\">", fp);
-		xmlencode(fp, cloneurl, strlen(cloneurl));
-		fputs("</a></td></tr>", fp);
-	}
+	fputs("</td></tr></table>", fp);
 
-	fputs("<table id=\"repo-top-buttons\"><tr><td>\n", fp);
+	fputs("<div id=\"repo-top-buttons\">\n", fp);
 	fprintf(fp, "<a href=\"%slog.html\">Log</a>  ", relpath);
 	fprintf(fp, "<a href=\"%sfiles.html\">Files</a>  ", relpath);
 	fprintf(fp, "<a href=\"%srefs.html\">Refs</a>", relpath);
@@ -566,7 +560,16 @@ writeheader(FILE *fp, const char *title)
 	if (license)
 		fprintf(fp, "  <a href=\"%sfile/%s.html\">LICENSE</a>",
 		        relpath, license);
-	fputs("</td></tr></table></td></tr></table>\n<hr/>\n<div id=\"content\">\n", fp);
+
+	if (cloneurl[0]) {
+		fputs("<tr class=\"url\"><td></td><td>git clone <a href=\"", fp);
+		xmlencode(fp, cloneurl, strlen(cloneurl)); /* not percent-encoded */
+		fputs("\">", fp);
+		xmlencode(fp, cloneurl, strlen(cloneurl));
+		fputs("</a></td></tr>", fp);
+	}
+
+	fputs("</div>\n<hr/>\n<div id=\"content\">\n", fp);
 }
 
 void
@@ -1018,13 +1021,13 @@ writeblob(git_object *obj, const char *fpath, const char *rpath, const char *fil
 
 	fp = efopen(fpath, "w");
 	writeheader(fp, filename);
-	fputs("<p> ", fp);
+	fputs("<p id=\"openfile-name\"> ", fp);
 	xmlencode(fp, filename, strlen(filename));
 	fprintf(fp, " (%zuB)", filesize);
 	fprintf(fp, " - <a href=\"%s%s\">raw</a></p><hr/>", relpath, rpath);
 
 	if (git_blob_is_binary((git_blob *)obj))
-		fputs("<p>Binary file.</p>\n", fp);
+		fputs("<p id=\"binary-file\">Binary file.</p>\n", fp);
 	else
 		lc = writeblobhtml(fp, (git_blob *)obj);
 
@@ -1092,9 +1095,9 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 	int r, rf, ret, is_obj_tree;
 
 	if (strlen(path) > 0) {
-		fputs("<h2>Directory: ", fp);
+		fputs("<h2 id=\"dir-title\">Directory: ", fp);
 		xmlencode(fp, path, strlen(path));
-		fputs("</h2>\n", fp);
+		fputs("</h2>\n<hr>\n", fp);
 	}
 
 	fputs("<table id=\"files\"><thead>\n<tr>"
@@ -1220,7 +1223,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			git_object_free(obj);
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
 			/* commit object in tree is a submodule */
-			fprintf(fp, "<tr><td>m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
+			fprintf(fp, "<tr><td id=\"file-mode\">m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
 				relpath);
 			xmlencode(fp, entrypath, strlen(entrypath));
 			fputs("</a> @ ", fp);
@@ -1427,6 +1430,7 @@ main(int argc, char *argv[])
 
 	/* read url or .git/url */
 	joinpath(path, sizeof(path), repodir, "url");
+	printf("%s\n", path);
 	if (!(fpread = fopen(path, "r"))) {
 		joinpath(path, sizeof(path), repodir, ".git/url");
 		fpread = fopen(path, "r");
@@ -1467,6 +1471,7 @@ main(int argc, char *argv[])
 		writeheader(fp, "README");
 		git_revparse_single(&obj, repo, readmefiles[r]);
 		const char *s = git_blob_rawcontent((git_blob *)obj);
+		printf("parsing markdown\n");
 		if (r == 1) {
 			git_off_t len = git_blob_rawsize((git_blob *)obj);
 			fputs("<div id=\"readme\">", fp);

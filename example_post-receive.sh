@@ -19,9 +19,9 @@ fi
 
 # config
 # paths must be absolute.
-reposdir="/home/src/src"
+reposdir="/var/www/git"
 dir="${reposdir}/${name}"
-htmldir="/home/www/domains/git.codemadness.org/htdocs"
+htmldir="/var/www/html"
 stagitdir="/"
 destdir="${htmldir}${stagitdir}"
 cachefile=".htmlcache"
