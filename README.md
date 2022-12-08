@@ -1,7 +1,7 @@
 stagit
 ------
 
-Fork of (stagit)[https://git.2f30.org/stagit/] a static git page generator.
+Fork of [stagit](https://git.2f30.org/stagit/) a static git page generator.
 
 It generates static HTML pages for a git repository.
 
@@ -33,8 +33,8 @@ Make index file for repositories:
 Build and install
 -----------------
 
-$ make
-# make install
+	$ make
+	# make install
 
 
 Dependencies
@@ -59,19 +59,19 @@ It may be useful to build static binaries, for example to run in a chroot.
 
 It can be done like this at the time of writing (v0.24):
 
-cd libgit2-src
+	cd libgit2-src
+	
+	# change the options in the CMake file: CMakeLists.txt
+	BUILD_SHARED_LIBS to OFF (static)
+	CURL to OFF              (not needed)
+	USE_SSH OFF              (not needed)
+	THREADSAFE OFF           (not needed)
+	USE_OPENSSL OFF          (not needed, use builtin)
 
-# change the options in the CMake file: CMakeLists.txt
-BUILD_SHARED_LIBS to OFF (static)
-CURL to OFF              (not needed)
-USE_SSH OFF              (not needed)
-THREADSAFE OFF           (not needed)
-USE_OPENSSL OFF          (not needed, use builtin)
-
-mkdir -p build && cd build
-cmake ../
-make
-make install
+	mkdir -p build && cd build
+	cmake ../
+	make
+	make install
 
 
 Extract owner field from git config
