@@ -1,7 +1,8 @@
 stagit
 ------
 
-Fork of [stagit](https://git.2f30.org/stagit/) a static git page generator.
+Fork of [stagit](https://git.codemadness.org/stagit/) a static git page
+generator.
 
 It generates static HTML pages for a git repository.
 

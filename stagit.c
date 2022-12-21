@@ -569,7 +569,8 @@ writeheader(FILE *fp, const char *title)
 		fputs("</a></td></tr>", fp);
 	}
 
-	fputs("</div>\n<hr/>\n<div id=\"content\">\n", fp);
+	/* fputs("</div>\n<hr/>\n<div id=\"content\">\n", fp); */
+	fputs("</div>\n", fp);
 }
 
 void
@@ -849,6 +850,8 @@ writelog(FILE *fp, const git_oid *oid)
 			relpath = "../";
 			fpfile = efopen(path, "w");
 			writeheader(fpfile, ci->summary);
+			fputs("<hr/>\n<div id=\"content\">\n", fpfile);
+
 			fputs("<pre id=\"commit-summary\">", fpfile);
 			printshowfile(fpfile, ci);
 			fputs("</pre>\n", fpfile);
@@ -1021,10 +1024,14 @@ writeblob(git_object *obj, const char *fpath, const char *rpath, const char *fil
 
 	fp = efopen(fpath, "w");
 	writeheader(fp, filename);
+	/* fputs("<hr>\n", fp); */
+	fputs("<div id=\"content\">\n", fp);
+
 	fputs("<p id=\"openfile-name\"> ", fp);
 	xmlencode(fp, filename, strlen(filename));
 	fprintf(fp, " (%zuB)", filesize);
-	fprintf(fp, " - <a href=\"%s%s\">raw</a></p><hr/>", relpath, rpath);
+	fprintf(fp, " - <a href=\"%s%s\">raw</a></p>", relpath, rpath);
+	/* fputs("<hr>\n", fp); */
 
 	if (git_blob_is_binary((git_blob *)obj))
 		fputs("<p id=\"binary-file\">Binary file.</p>\n", fp);
@@ -1097,13 +1104,18 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 	if (strlen(path) > 0) {
 		fputs("<h2 id=\"dir-title\">Directory: ", fp);
 		xmlencode(fp, path, strlen(path));
-		fputs("</h2>\n<hr>\n", fp);
-	}
+		fputs("</h2>\n\n", fp);
 
-	fputs("<table id=\"files\"><thead>\n<tr>"
-			"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
-			"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
-			"</tr>\n</thead><tbody>\n", fp);
+		fputs("<table id=\"dir-files\"><thead>\n<tr>"
+				"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
+				"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
+				"</tr>\n</thead><tbody>\n", fp);
+	} else {
+		fputs("<table id=\"files\"><thead>\n<tr>"
+				"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
+				"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
+				"</tr>\n</thead><tbody>\n", fp);
+	}
 
 	if (strlen(path) > 0) {
 		if (strlcpy(tmp, path, sizeof(tmp)) >= sizeof(tmp))
@@ -1163,6 +1175,9 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 				if (strlcat(tmp2, entrypath, sizeof(tmp2)) >= sizeof(tmp2))
 					errx(1, "path truncated: '%s'", tmp2);
 				writeheader(fp_subtree, tmp2);
+				/* fputs("<hr/>\n", fp_subtree); */
+				fputs("<div id=\"content\">\n", fp_subtree);
+
 				/* NOTE: recurses */
 				ret = writefilestree(fp_subtree, (git_tree *)obj,
 				                     entrypath);
@@ -1172,8 +1187,6 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 				is_obj_tree = 1;
 				if (ret)
 					return ret;
-
-				fputs("<tr><td id=\"file-mode\">", fp);
 
 				/* make entire table row clickable */
 				fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
@@ -1234,7 +1247,6 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 				git_object_free(obj);
 				continue;
 			}
-			fputs("<tr><td id=\"file-mode\">", fp);
 
 			/* make entire table row clickable */
 			fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
@@ -1511,6 +1523,9 @@ main(int argc, char *argv[])
 	if (readme) {
 		fp = efopen("readme.html", "w");
 		writeheader(fp, "README");
+
+		fputs("<hr id=\"readme-hr\">\n", fp);
+
 		git_revparse_single(&obj, repo, readmefiles[r]);
 		const char *s = git_blob_rawcontent((git_blob *)obj);
 		printf("parsing markdown\n");
@@ -1536,6 +1551,7 @@ main(int argc, char *argv[])
 	relpath = "";
 	mkdir("commit", S_IRWXU | S_IRWXG | S_IRWXO);
 	writeheader(fp, "Log");
+	fputs("<hr/>\n<div id=\"content\">\n", fp);
 	fputs("<table id=\"log\"><thead>\n<tr>"
 		  "<td id=\"log-date\"><b>Date</b></td>"
 	      "<td id=\"log-summary\"><b>Commit message</b></td>"
@@ -1594,6 +1610,24 @@ main(int argc, char *argv[])
 	writeheader(fp, "Files");
 	if (head)
 		writefiles(fp, head);
+	if (readme) {
+		git_revparse_single(&obj, repo, readmefiles[r]);
+		const char *s = git_blob_rawcontent((git_blob *)obj);
+		printf("parsing markdown\n");
+		if (r == 1) {
+			git_off_t len = git_blob_rawsize((git_blob *)obj);
+			fputs("<div id=\"readme\">", fp);
+			if (md_html(s, len, process_output_md, fp, MD_FLAG_TABLES | MD_FLAG_TASKLISTS |
+			    MD_FLAG_PERMISSIVEEMAILAUTOLINKS | MD_FLAG_PERMISSIVEURLAUTOLINKS, 0))
+				err(1, "error parsing markdown");
+			fputs("</div>\n", fp);
+		} else {
+			fputs("<pre id=\"readme\">", fp);
+			xmlencode(fp, s, strlen(s));
+			fputs("</pre>\n", fp);
+		}
+		git_object_free(obj);
+	}
 	writefooter(fp);
 	checkfileerror(fp, "files.html", 'w');
 	fclose(fp);
@@ -1601,6 +1635,7 @@ main(int argc, char *argv[])
 	/* summary page with branches and tags */
 	fp = efopen("refs.html", "w");
 	writeheader(fp, "Refs");
+	fputs("<hr/>\n<div id=\"content\">\n", fp);
 	writerefs(fp);
 	writefooter(fp);
 	checkfileerror(fp, "refs.html", 'w');
