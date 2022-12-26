@@ -1,20 +1,16 @@
-stagit
-------
+# stagit
 
 Fork of [stagit](https://git.codemadness.org/stagit/) a static git page
-generator.
+generator, it generates static HTML pages for a git repository.
 
-It generates static HTML pages for a git repository.
+## Changes with the original upstream
 
-This fork adds css ids selectors to elements on the generated html page, this
-adds the posibility to customize those elements with an external css file
-
-Also makes rows in tables clickable so its easier to navigate both in desktop
-and mobile
+- Add css ids selectors to common elements
+- Entire row of tables clickable
+- Shows a preview of the README (if available) (see dependencies)
 
 
-Usage
------
+## Usage
 
 Make files per repository:
 
@@ -31,37 +27,34 @@ Make index file for repositories:
 	               path/to/gitrepo3 > index.html
 
 
-Build and install
------------------
+## Build and install
 
 	$ make
 	# make install
 
 
-Dependencies
-------------
+## Dependencies
 
 - C compiler (C99).
 - libc (tested with OpenBSD, FreeBSD, NetBSD, Linux: glibc and musl).
 - libgit2 (v0.22+).
+- [md4c](https://github.com/mity/md4c) (README preview)
 - POSIX make (optional).
 
 
-Documentation
--------------
+## Documentation
 
 See man pages: stagit(1) and stagit-index(1).
 
 
-Building a static binary
-------------------------
+## Building a static binary
 
 It may be useful to build static binaries, for example to run in a chroot.
 
 It can be done like this at the time of writing (v0.24):
 
 	cd libgit2-src
-	
+
 	# change the options in the CMake file: CMakeLists.txt
 	BUILD_SHARED_LIBS to OFF (static)
 	CURL to OFF              (not needed)
@@ -75,8 +68,7 @@ It can be done like this at the time of writing (v0.24):
 	make install
 
 
-Extract owner field from git config
------------------------------------
+## Extract owner field from git config
 
 A way to extract the gitweb owner for example in the format:
 
@@ -92,8 +84,8 @@ Script:
 	}'
 
 
-Set clone URL for a directory of repos
---------------------------------------
+## Set clone URL for a directory of repos
+
 	#!/bin/sh
 	cd "$dir"
 	for i in *; do
@@ -101,8 +93,7 @@ Set clone URL for a directory of repos
 	done
 
 
-Update files on git push
-------------------------
+## Update files on git push
 
 Using a post-receive hook the static files can be automatically updated.
 Keep in mind git push -f can change the history and the commits may need
@@ -131,8 +122,8 @@ git post-receive hook (repo/.git/hooks/post-receive):
 	# see example_create.sh for normal creation of the files.
 
 
-Create .tar.gz archives by tag
-------------------------------
+## Create .tar.gz archives by tag
+
 	#!/bin/sh
 	name="stagit"
 	mkdir -p archives
@@ -148,8 +139,7 @@ Create .tar.gz archives by tag
 	done
 
 
-Features
---------
+## Features
 
 - Log of all commits from HEAD.
 - Log and diffstat per commit.
@@ -166,8 +156,7 @@ Features
 - Usable with text-browsers such as dillo, links, lynx and w3m.
 
 
-Cons
-----
+## Cons
 
 - Not suitable for large repositories (2000+ commits), because diffstats are
   an expensive operation, the cache (-c flag) is a workaround for this in
