@@ -8,6 +8,7 @@ generator, it generates static HTML pages for a git repository.
 - Add css ids selectors to common elements
 - Entire row of tables clickable
 - Shows a preview of the README (if available) (see dependencies)
+- Show folders instead of tree view (and show them first)
 
 
 ## Usage
