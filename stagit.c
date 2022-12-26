@@ -21,6 +21,7 @@
 
 /* #define DATE_SHORT_FMT	"%Y-%m-%d %H:%M" */
 #define DATE_SHORT_FMT	"%H:%M %d-%m-%Y"
+#define TABWIDTH	4
 
 struct deltainfo {
 	git_patch *patch;
@@ -426,6 +427,7 @@ xmlencodeline(FILE *fp, const char *s, size_t len)
 		case '\'': fputs("&#39;",  fp); break;
 		case '&':  fputs("&amp;",  fp); break;
 		case '"':  fputs("&quot;", fp); break;
+		case '\t': fprintf(fp, "%*c", TABWIDTH, ' '); break;
 		case '\r': break; /* ignore CR */
 		case '\n': break; /* ignore LF */
 		default:   putc(*s, fp);

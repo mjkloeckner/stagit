@@ -18,7 +18,7 @@ STAGIT_CPPFLAGS = -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -D_BSD_SOURCE
 
 # Uncomment to enable workaround for older libgit2 which don't support this
 # option. This workaround will be removed in the future *pinky promise*.
-STAGIT_CFLAGS += -DGIT_OPT_SET_OWNER_VALIDATION=-1
+# STAGIT_CFLAGS += -DGIT_OPT_SET_OWNER_VALIDATION=-1
 
 SRC = \
 	stagit.c\
@@ -35,7 +35,7 @@ MAN1 = \
 	stagit-index.1
 DOC = \
 	LICENSE\
-	README
+	README.md
 HDR = compat.h
 
 COMPATOBJ = \
@@ -88,7 +88,7 @@ install: all
 		logo.png\
 		example_create.sh\
 		example_post-receive.sh\
-		README\
+		README.md\
 		${DESTDIR}${DOCPREFIX}
 	# installing manual pages.
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
@@ -105,7 +105,7 @@ uninstall:
 		${DESTDIR}${DOCPREFIX}/logo.png\
 		${DESTDIR}${DOCPREFIX}/example_create.sh\
 		${DESTDIR}${DOCPREFIX}/example_post-receive.sh\
-		${DESTDIR}${DOCPREFIX}/README
+		${DESTDIR}${DOCPREFIX}/README.md
 	-rmdir ${DESTDIR}${DOCPREFIX}
 	# removing manual pages.
 	for m in ${MAN1}; do rm -f ${DESTDIR}${MANPREFIX}/man1/$$m; done
