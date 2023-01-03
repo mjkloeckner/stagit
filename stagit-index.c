@@ -9,7 +9,7 @@
 #include <git2.h>
 
 /* #define LAST_COMMIT_DATE_FORMAT "%Y-%m-%d %H:%M" */
-#define LAST_COMMIT_DATE_FORMAT "%H:%M %d-%m-%Y"
+#define LAST_COMMIT_DATE_FORMAT "%H:%M %d %b %Y"
 
 static git_repository *repo;
 
