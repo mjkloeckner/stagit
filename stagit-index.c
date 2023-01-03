@@ -9,7 +9,7 @@
 #include <git2.h>
 
 /* #define LAST_COMMIT_DATE_FORMAT "%Y-%m-%d %H:%M" */
-#define LAST_COMMIT_DATE_FORMAT "%H:%M %d %b %Y"
+#define LAST_COMMIT_DATE_FORMAT "%d %b %Y"
 
 static git_repository *repo;
 
@@ -112,7 +112,7 @@ writeheader(FILE *fp)
 	xmlencode(fp, description, strlen(description));
 	fputs("</h1>\n"
 		"<span class=\"main-desc\"><a href=\"https://kloeckner.com.ar/\">kloeckner.com.ar</a></span>"
-		"</td></tr>\n</table>\n<hr/>\n<div id=\"content\">\n"
+		"</td></tr>\n</table>\n<div id=\"content\">\n"
 		"<table id=\"index\"><thead id=\"legends\">\n"
 		"<tr><td id=\"name\"><b>Name</b></td><td id=\"description\"><b>Description</b></td><td id=\"owner\"><b>Owner</b></td>"
 		"<td id=\"last-commit\"><b>Last commit</b></td></tr>"
@@ -124,17 +124,6 @@ writefooter(FILE *fp)
 {
 	fputs("</tbody>\n</table>\n</div>\n</body>\n</html>\n", fp);
 }
-
-/* void */
-/* writefooter(FILE *fp) */
-/* { */
-/* 	fputs("</tbody>\n</table>\n</div></body>\n", fp); */
-/* 	fputs("<hr><footer\">generated with \ */
-/* 			<a href=\"https://codemadness.org/stagit.html\">stagit</a>\ */
-/* 			</footer>\n", fp); */
-/* 	fputs("</html>\n", fp); */
-/* } */
-
 
 int
 writelog(FILE *fp)
