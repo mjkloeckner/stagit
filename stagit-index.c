@@ -163,6 +163,17 @@ writelog(FILE *fp)
 	xmlencode(fp, stripped_name, strlen(stripped_name));
 	fputs("</a></td>", fp);
 
+
+	fputs("<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location='/",fp);
+	percentencode(fp, stripped_name, strlen(stripped_name));
+	fputs("';\">", fp);
+
+	fputs("<td id=\"name\"><a href=\"",fp);
+	percentencode(fp, stripped_name, strlen(stripped_name));
+	fputs("/files.html\">", fp);
+	xmlencode(fp, stripped_name, strlen(stripped_name));
+	fputs("</a></td>", fp);
+
 	fputs("<td id=\"description\"><a href=\"", fp);
 	percentencode(fp, stripped_name, strlen(stripped_name));
 	fputs("/files.html\">", fp);
