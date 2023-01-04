@@ -1195,7 +1195,9 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 				percentencode(fp, filepath, strlen(filepath));
 				fputs("\'\"><td id=\"file-mode\">", fp);
 
-				fprintf(fp, "<a href=\"%s>", relpath);
+				fprintf(fp, "<a href=\"%s", relpath);
+				percentencode(fp, filepath, strlen(filepath));
+				fputs("\">",fp);
 				fputs(filemode(git_tree_entry_filemode(entry)), fp);
 				fputs("</a></td>", fp);
 
