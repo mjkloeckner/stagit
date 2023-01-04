@@ -773,7 +773,7 @@ writelogline(FILE *fp, struct commitinfo *ci)
 	/* fputs("<tr><td>", fp); */
 
 	/* make entire table row clickable */
-	fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location.href=\'commit/%s.html'\">", ci->oid);
+	fprintf(fp, "<tr onclick=\"window.location.href=\'commit/%s.html'\">", ci->oid);
 	printf("%s\n", ci->oid);
 
 	fputs("<td id=\"log-date\">", fp);
@@ -1133,7 +1133,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			else
 				++parent;
 		}
-		fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location.href=\'../");
+		fprintf(fp, "<tr onclick=\"window.location.href=\'../");
 		percentencode(fp, parent, strlen(parent));
 		fputs(".html\'\">", fp);
 
@@ -1161,7 +1161,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		if (rf < 0 || (size_t)rf >= sizeof(rawpath))
 			errx(1, "path truncated: 'raw/%s'", entrypath);
 
-		if (!git_tree_entry_to_object(&obj, repo, entry))
+		if (!git_tree_entry_to_object(&obj, repo, entry)) {
 			if (git_object_type(obj) == GIT_OBJ_TREE) {
 				mkdirfile(filepath);
 
@@ -1191,13 +1191,13 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 					return ret;
 
 				/* make entire table row clickable */
-				fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
-						window.location.href=\'%s", relpath);
+				fprintf(fp, "<tr onclick=\"window.location.href=\'%s", relpath);
 				percentencode(fp, filepath, strlen(filepath));
 				fputs("\'\"><td id=\"file-mode\">", fp);
-				fputs(filemode(git_tree_entry_filemode(entry)), fp);
-				fprintf(fp, "</td>");
 
+				fprintf(fp, "<a href=\"%s>", relpath);
+				fputs(filemode(git_tree_entry_filemode(entry)), fp);
+				fputs("</a></td>", fp);
 
 				if (git_object_type(obj) == GIT_OBJ_TREE)
 					fprintf(fp, "<td id=\"dir-name\"><a href=\"%s", relpath);
@@ -1209,15 +1209,20 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 				xmlencode(fp, entryname, strlen(entryname));
 
-				fputs("</a></td><td id=\"file-size\" class=\"num\" align=\"right\">", fp);
+				fputs("</a></td>", fp);
+				fputs("<td id=\"file-size\" class=\"num\">", fp);
+				fprintf(fp, "<a href=\"%s", relpath);
+				fputs(">", fp);
 
 				if (lc > 0)
 					fprintf(fp, "%zuL", lc);
 				else if (!is_obj_tree)
 					fprintf(fp, "%zuB", filesize);
-				fputs("</td></tr>\n", fp);
+
+				fputs("</a></td></tr>\n", fp);
 				git_object_free(obj);
 			}
+		}
 	}
 
 	for (i = 0; i < count; i++) {
@@ -1251,8 +1256,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			}
 
 			/* make entire table row clickable */
-			fprintf(fp, "<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"\
-					window.location.href=\'%s", relpath);
+			fprintf(fp, "<tr onclick=\"window.location.href=\'%s", relpath);
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\'\"><td id=\"file-mode\">", fp);
 			fputs(filemode(git_tree_entry_filemode(entry)), fp);
