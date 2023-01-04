@@ -1108,12 +1108,12 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		xmlencode(fp, path, strlen(path));
 		fputs("</h2>\n\n", fp);
 
-		fputs("<table id=\"dir-files\"><thead>\n<tr>"
+		fputs("<table id=\"dir-files\"><thead id=\"legends\">\n<tr>"
 				"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
 				"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
 				"</tr>\n</thead><tbody>\n", fp);
 	} else {
-		fputs("<table id=\"files\"><thead>\n<tr>"
+		fputs("<table id=\"files\"><thead id=\"legends\">\n<tr>"
 				"<td id=\"file-mode\"><b>Mode</b></td><td><b>Name</b></td>"
 				"<td id=\"file-size\" class=\"num\" align=\"right\"><b>Size</b></td>"
 				"</tr>\n</thead><tbody>\n", fp);
@@ -1334,7 +1334,7 @@ writerefs(FILE *fp)
 		/* print header if it has an entry (first). */
 		if (++count == 1) {
 			fprintf(fp, "<h2>%s</h2><table id=\"%s\">"
-		                "<thead>\n<tr><td><b>Name</b></td>"
+		                "<thead id=\"legends\">\n<tr><td><b>Name</b></td>"
 			        "<td><b>Last commit date</b></td>"
 			        "<td><b>Author</b></td>\n</tr>\n"
 			        "</thead><tbody>\n",
@@ -1554,7 +1554,7 @@ main(int argc, char *argv[])
 	mkdir("commit", S_IRWXU | S_IRWXG | S_IRWXO);
 	writeheader(fp, "Log");
 	fputs("<hr/>\n<div id=\"content\">\n", fp);
-	fputs("<table id=\"log\"><thead>\n<tr>"
+	fputs("<table id=\"log\"><thead id=\"legends\">\n<tr>"
 		  "<td id=\"log-date\"><b>Date</b></td>"
 	      "<td id=\"log-summary\"><b>Commit message</b></td>"
 	      "<td id=\"log-author\"><b>Author</b></td>"
