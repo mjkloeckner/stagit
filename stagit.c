@@ -1276,12 +1276,15 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 			xmlencode(fp, entryname, strlen(entryname));
 
-			fputs("</a></td><td id=\"file-size\" class=\"num\" align=\"right\">", fp);
+			fputs("</a></td>", fp);
+
+			fputs("<td id=\"file-size\" class=\"num\" align=\"right\">", fp);
 
 			if (lc > 0)
 				fprintf(fp, "%zuL", lc);
 			else if (!is_obj_tree)
 				fprintf(fp, "%zuB", filesize);
+
 			fputs("</td></tr>\n", fp);
 			git_object_free(obj);
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
