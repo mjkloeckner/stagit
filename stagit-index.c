@@ -163,7 +163,7 @@ writelog(FILE *fp)
 	/* xmlencode(fp, stripped_name, strlen(stripped_name)); */
 	/* fputs("</a></td>", fp); */
 
-	fputs("<tr onclick=\"window.location='/",fp);
+	fputs("<tr id=\"entry\" onclick=\"window.location='/",fp);
 	percentencode(fp, stripped_name, strlen(stripped_name));
 	fputs("';\">", fp);
 
