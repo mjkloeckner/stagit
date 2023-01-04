@@ -770,11 +770,9 @@ printshowfile(FILE *fp, struct commitinfo *ci)
 void
 writelogline(FILE *fp, struct commitinfo *ci)
 {
-	/* fputs("<tr><td>", fp); */
-
 	/* make entire table row clickable */
-	fprintf(fp, "<tr onclick=\"window.location.href=\'commit/%s.html'\">", ci->oid);
-	printf("%s\n", ci->oid);
+	fprintf(fp, "<tr id=\"entry\" onclick=\"window.location.href=\'commit/%s.html'\">",
+			ci->oid);
 
 	fputs("<td id=\"log-date\">", fp);
 	if (ci->author)
@@ -1133,7 +1131,8 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			else
 				++parent;
 		}
-		fprintf(fp, "<tr onclick=\"window.location.href=\'../");
+
+		fprintf(fp, "<tr id=\"entry\" onclick=\"window.location.href=\'../");
 		percentencode(fp, parent, strlen(parent));
 		fputs(".html\'\">", fp);
 
@@ -1191,7 +1190,9 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 					return ret;
 
 				/* make entire table row clickable */
-				fprintf(fp, "<tr onclick=\"window.location.href=\'%s", relpath);
+				fprintf(fp, "<tr id=\"entry\" onclick=\"window.location.href=\'%s",
+						relpath);
+
 				percentencode(fp, filepath, strlen(filepath));
 				fputs("\'\"><td id=\"file-mode\">", fp);
 
@@ -1259,7 +1260,8 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			}
 
 			/* make entire table row clickable */
-			fprintf(fp, "<tr onclick=\"window.location.href=\'%s", relpath);
+			fprintf(fp, "<tr id=\"entry\" onclick=\"window.location.href=\'%s",
+					relpath);
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\'\"><td id=\"file-mode\">", fp);
 			fputs(filemode(git_tree_entry_filemode(entry)), fp);
