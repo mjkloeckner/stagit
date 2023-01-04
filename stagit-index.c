@@ -157,12 +157,11 @@ writelog(FILE *fp)
 	/* percentencode(fp, stripped_name, strlen(stripped_name)); */
 	/* fputs("';\"><td id=\"name\"><a href=\"", fp); */
 
-	fputs("<tr><td id=\"name\"><a href=\"",fp);
-	percentencode(fp, stripped_name, strlen(stripped_name));
-	fputs("/files.html\">", fp);
-	xmlencode(fp, stripped_name, strlen(stripped_name));
-	fputs("</a></td>", fp);
-
+	/* fputs("<tr><td id=\"name\"><a href=\"",fp); */
+	/* percentencode(fp, stripped_name, strlen(stripped_name)); */
+	/* fputs("/files.html\">", fp); */
+	/* xmlencode(fp, stripped_name, strlen(stripped_name)); */
+	/* fputs("</a></td>", fp); */
 
 	fputs("<tr style=\"cursor: pointer; cursor: hand;\" onclick=\"window.location='/",fp);
 	percentencode(fp, stripped_name, strlen(stripped_name));
