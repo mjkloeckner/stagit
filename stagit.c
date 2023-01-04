@@ -1138,8 +1138,11 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 		fputs("<td id=\"file-mode\">d---------</td><td><a class=\"dir\" href=\"../", fp);
 		xmlencode(fp, parent, strlen(parent));
+		fputs(".html\">..</a></td>", fp);
 
-		fputs(".html\">..</a></td><td class=\"num\" align=\"right\"></td></tr>\n", fp);
+		fputs("<td id=\"dir-size\"><a href=\"../", fp);
+		xmlencode(fp, parent, strlen(parent));
+		fputs(".html\">.</a></td></tr>\n", fp);
 	}
 
 	count = git_tree_entrycount(tree);
