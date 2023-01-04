@@ -1214,7 +1214,8 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 				fputs("</a></td>", fp);
 				fputs("<td id=\"file-size\" class=\"num\">", fp);
 				fprintf(fp, "<a href=\"%s", relpath);
-				fputs(">", fp);
+				percentencode(fp, filepath, strlen(filepath));
+				fputs("\">", fp);
 
 				if (lc > 0)
 					fprintf(fp, "%zuL", lc);
