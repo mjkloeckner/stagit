@@ -1209,19 +1209,29 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 				percentencode(fp, filepath, strlen(filepath));
 				fputs("\">", fp);
-
 				xmlencode(fp, entryname, strlen(entryname));
-
 				fputs("</a></td>", fp);
-				fputs("<td id=\"file-size\" class=\"num\">", fp);
-				fprintf(fp, "<a href=\"%s", relpath);
-				percentencode(fp, filepath, strlen(filepath));
-				fputs("\">", fp);
 
-				if (lc > 0)
+				if (lc > 0) {
+					fputs("<td id=\"file-size\" class=\"num\">", fp);
+					fprintf(fp, "<a href=\"%s", relpath);
+					percentencode(fp, filepath, strlen(filepath));
+					fputs("\">", fp);
 					fprintf(fp, "%zuL", lc);
-				else if (!is_obj_tree)
+				}
+				else if (!is_obj_tree) {
+					fputs("<td id=\"file-size\" class=\"num\">", fp);
+					fprintf(fp, "<a href=\"%s", relpath);
+					percentencode(fp, filepath, strlen(filepath));
+					fputs("\">", fp);
 					fprintf(fp, "%zuB", filesize);
+				}
+				else if (is_obj_tree) {
+					fputs("<td id=\"dir-size\">", fp);
+					fprintf(fp, "<a href=\"%s", relpath);
+					percentencode(fp, filepath, strlen(filepath));
+					fputs("\">.", fp);
+				}
 
 				fputs("</a></td></tr>\n", fp);
 				git_object_free(obj);
