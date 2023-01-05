@@ -775,13 +775,9 @@ writelogline(FILE *fp, struct commitinfo *ci)
 
 	fputs("<td id=\"log-date\">", fp);
 	fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
-	xmlencode(fp, ci->summary, strlen(ci->summary));
-	fputs("\">",fp);
-
 	if (ci->author)
 		printtimeshort(fp, &(ci->author->when));
-
-	fputs("</a></td>", fp);
+	fputs("</a></td>",fp);
 
 	fputs("<td id=\"log-summary\">", fp);
 	if (ci->summary) {
