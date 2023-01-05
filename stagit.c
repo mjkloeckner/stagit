@@ -1519,6 +1519,8 @@ main(int argc, char *argv[])
 		if (!strcmp(p, ".git"))
 			*p = '\0';
 
+	printf("%s\n", strippedname);
+
 	/* read description or .git/description */
 	joinpath(path, sizeof(path), repodir, "description");
 	if (!(fpread = fopen(path, "r"))) {
@@ -1534,7 +1536,6 @@ main(int argc, char *argv[])
 
 	/* read url or .git/url */
 	joinpath(path, sizeof(path), repodir, "url");
-	printf("%s\n", path);
 	if (!(fpread = fopen(path, "r"))) {
 		joinpath(path, sizeof(path), repodir, ".git/url");
 		fpread = fopen(path, "r");
@@ -1578,7 +1579,6 @@ main(int argc, char *argv[])
 
 		git_revparse_single(&obj, repo, readmefiles[r]);
 		const char *s = git_blob_rawcontent((git_blob *)obj);
-		printf("parsing markdown\n");
 		if (r == 1) {
 			git_off_t len = git_blob_rawsize((git_blob *)obj);
 			fputs("<div id=\"readme\">", fp);
@@ -1663,7 +1663,6 @@ main(int argc, char *argv[])
 	if (readme) {
 		git_revparse_single(&obj, repo, readmefiles[r]);
 		const char *s = git_blob_rawcontent((git_blob *)obj);
-		printf("parsing markdown\n");
 		if (r == 1) {
 			git_off_t len = git_blob_rawsize((git_blob *)obj);
 			fputs("<div id=\"readme\">", fp);
