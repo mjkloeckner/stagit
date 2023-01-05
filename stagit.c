@@ -774,25 +774,45 @@ writelogline(FILE *fp, struct commitinfo *ci)
 			ci->oid);
 
 	fputs("<td id=\"log-date\">", fp);
+	fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
+	xmlencode(fp, ci->summary, strlen(ci->summary));
+	fputs("\">",fp);
+
 	if (ci->author)
 		printtimeshort(fp, &(ci->author->when));
 
-	fputs("</td><td id=\"log-summary\">", fp);
+	fputs("</a></td>", fp);
+
+	fputs("<td id=\"log-summary\">", fp);
 	if (ci->summary) {
 		fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 		xmlencode(fp, ci->summary, strlen(ci->summary));
-		fputs("</a>", fp);
+		fputs("</a>",fp);
 	}
-	fputs("</td><td id=\"log-author\">", fp);
-	if (ci->author)
+	fputs("</td>", fp);
+
+	fputs("<td id=\"log-author\">", fp);
+	if (ci->author) {
+		fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 		xmlencode(fp, ci->author->name, strlen(ci->author->name));
-	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+		fputs("</a>",fp);
+	}
+	fputs("</td>", fp);
+
+	fputs("<td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+	fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 	fprintf(fp, "%zu", ci->filecount);
-	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+	fputs("</a></td>",fp);
+
+	fputs("<td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+	fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 	fprintf(fp, "+%zu", ci->addcount);
-	fputs("</td><td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+	fputs("</a></td>",fp);
+
+	fputs("<td id=\"log-files\" class=\"num\" align=\"right\">", fp);
+	fprintf(fp, "<a href=\"%scommit/%s.html\">", relpath, ci->oid);
 	fprintf(fp, "-%zu", ci->delcount);
-	fputs("</td></tr>\n", fp);
+	fputs("</a></td></tr>\n", fp);
 }
 
 int
