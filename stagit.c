@@ -718,8 +718,6 @@ printshowfile(FILE *fp, struct commitinfo *ci)
 	        ci->addcount,  ci->addcount  == 1 ? "" : "s",
 	        ci->delcount,  ci->delcount  == 1 ? "" : "s");
 
-	fputs("<hr/>", fp);
-
 	for (i = 0; i < ci->ndeltas; i++) {
 		patch = ci->deltas[i]->patch;
 		delta = git_patch_get_delta(patch);
