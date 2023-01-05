@@ -509,6 +509,7 @@ printtimeshort(FILE *fp, const git_time *intime)
 	time_t t;
 	char out[32];
 
+	tzset();
 	t = (time_t)intime->time;
 	if (!(intm = localtime(&t)))
 		return;
