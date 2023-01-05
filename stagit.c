@@ -510,7 +510,7 @@ printtimeshort(FILE *fp, const git_time *intime)
 	char out[32];
 
 	t = (time_t)intime->time;
-	if (!(intm = gmtime(&t)))
+	if (!(intm = localtime(&t)))
 		return;
 	strftime(out, sizeof(out), DATE_SHORT_FMT, intm);
 	fputs(out, fp);
