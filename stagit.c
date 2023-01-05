@@ -851,7 +851,7 @@ writelog(FILE *fp, const git_oid *oid)
 			relpath = "../";
 			fpfile = efopen(path, "w");
 			writeheader(fpfile, ci->summary);
-			fputs("<hr/>\n<div id=\"content\">\n", fpfile);
+			fputs("<div id=\"content\">\n", fpfile);
 
 			fputs("<pre id=\"commit-summary\">", fpfile);
 			printshowfile(fpfile, ci);
@@ -1573,8 +1573,6 @@ main(int argc, char *argv[])
 		fp = efopen("readme.html", "w");
 		writeheader(fp, "README");
 
-		fputs("<hr id=\"readme-hr\">\n", fp);
-
 		git_revparse_single(&obj, repo, readmefiles[r]);
 		const char *s = git_blob_rawcontent((git_blob *)obj);
 		if (r == 1) {
@@ -1599,7 +1597,7 @@ main(int argc, char *argv[])
 	relpath = "";
 	mkdir("commit", S_IRWXU | S_IRWXG | S_IRWXO);
 	writeheader(fp, "Log");
-	fputs("<hr/>\n<div id=\"content\">\n", fp);
+	fputs("<div id=\"content\">\n", fp);
 	fputs("<table id=\"log\"><thead id=\"legends\">\n<tr>"
 		  "<td id=\"log-date\"><b>Date</b></td>"
 	      "<td id=\"log-summary\"><b>Commit message</b></td>"
@@ -1682,7 +1680,7 @@ main(int argc, char *argv[])
 	/* summary page with branches and tags */
 	fp = efopen("refs.html", "w");
 	writeheader(fp, "Refs");
-	fputs("<hr/>\n<div id=\"content\">\n", fp);
+	fputs("<div id=\"content\">\n", fp);
 	writerefs(fp);
 	writefooter(fp);
 	checkfileerror(fp, "refs.html", 'w');
