@@ -1147,6 +1147,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 	count = git_tree_entrycount(tree);
 
+	/* print directories first if any */
 	for (i = 0; i < count; i++) {
 		if (!(entry = git_tree_entry_byindex(tree, i)) ||
 		    !(entryname = git_tree_entry_name(entry)))
@@ -1242,6 +1243,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		}
 	}
 
+	/* print all files skipping directories */
 	for (i = 0; i < count; i++) {
 		if (!(entry = git_tree_entry_byindex(tree, i)) ||
 		    !(entryname = git_tree_entry_name(entry)))
@@ -1277,9 +1279,12 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 					relpath);
 			percentencode(fp, filepath, strlen(filepath));
 			fputs("\'\"><td id=\"file-mode\">", fp);
-			fputs(filemode(git_tree_entry_filemode(entry)), fp);
-			fprintf(fp, "</td>");
 
+			fprintf(fp, "<a href=\"%s", relpath);
+			percentencode(fp, filepath, strlen(filepath));
+			fputs("\">",fp);
+			fputs(filemode(git_tree_entry_filemode(entry)), fp);
+			fputs("</a></td>", fp);
 
 			if (git_object_type(obj) == GIT_OBJ_TREE)
 				fprintf(fp, "<td id=\"dir-name\"><a href=\"%s", relpath);
@@ -1295,17 +1300,35 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 
 			fputs("<td id=\"file-size\" class=\"num\" align=\"right\">", fp);
 
-			if (lc > 0)
-				fprintf(fp, "%zuL", lc);
-			else if (!is_obj_tree)
-				fprintf(fp, "%zuB", filesize);
 
-			fputs("</td></tr>\n", fp);
+			if (lc > 0) {
+				fputs("<td id=\"file-size\" class=\"num\">", fp);
+				fprintf(fp, "<a href=\"%s", relpath);
+				percentencode(fp, filepath, strlen(filepath));
+				fputs("\">", fp);
+				fprintf(fp, "%zuL", lc);
+			}
+			else if (!is_obj_tree) {
+				fputs("<td id=\"file-size\" class=\"num\">", fp);
+				fprintf(fp, "<a href=\"%s", relpath);
+				percentencode(fp, filepath, strlen(filepath));
+				fputs("\">", fp);
+				fprintf(fp, "%zuB", filesize);
+			}
+			else if (is_obj_tree) {
+				fputs("<td id=\"dir-size\">", fp);
+				fprintf(fp, "<a href=\"%s", relpath);
+				percentencode(fp, filepath, strlen(filepath));
+				fputs("\">.", fp);
+			}
+
+			fputs("</a></td></tr>\n", fp);
 			git_object_free(obj);
+
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
 			/* commit object in tree is a submodule */
-			fprintf(fp, "<tr><td id=\"file-mode\">m---------</td><td><a href=\"%sfile/.gitmodules.html\">",
-				relpath);
+			fputs("<tr><td id=\"file-mode\">m---------</td>", fp);
+			fprintf("<td><a href=\"%sfile/.gitmodules.html\">", relpath);
 			xmlencode(fp, entrypath, strlen(entrypath));
 			fputs("</a> @ ", fp);
 			git_oid_tostr(oid, sizeof(oid), git_tree_entry_id(entry));
