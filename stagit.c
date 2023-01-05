@@ -1328,7 +1328,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		} else if (git_tree_entry_type(entry) == GIT_OBJ_COMMIT) {
 			/* commit object in tree is a submodule */
 			fputs("<tr><td id=\"file-mode\">m---------</td>", fp);
-			fprintf("<td><a href=\"%sfile/.gitmodules.html\">", relpath);
+			fprintf(fp, "<td><a href=\"%sfile/.gitmodules.html\">", relpath);
 			xmlencode(fp, entrypath, strlen(entrypath));
 			fputs("</a> @ ", fp);
 			git_oid_tostr(oid, sizeof(oid), git_tree_entry_id(entry));
