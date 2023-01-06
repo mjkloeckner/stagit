@@ -866,9 +866,9 @@ writelog(FILE *fp, const git_oid *oid)
 			fpfile = efopen(path, "w");
 			writeheader(fpfile, ci->summary);
 			fputs("<div id=\"content\">\n", fpfile);
-
 			fputs("<pre id=\"commit-summary\">", fpfile);
 			printshowfile(fpfile, ci);
+			printf("%s\n", ci->oid);
 			fputs("</pre>\n", fpfile);
 			writefooter(fpfile);
 			checkfileerror(fpfile, path, 'w');
