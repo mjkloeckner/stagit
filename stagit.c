@@ -540,7 +540,7 @@ writeheader(FILE *fp, const char *title)
 	xmlencode(fp, name, strlen(name));
 	fprintf(fp, " Atom Feed (tags)\" href=\"%stags.xml\" />\n", relpath);
 	fprintf(fp, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%sstyle.css\" />\n", relpath);
-	fputs("</head>\n<body>\n<table><tr><td>", fp);
+	fputs("</head>\n<body>\n<table id=\"header-table\"><tr><td>", fp);
 	fprintf(fp, "<a href=\"https://git.kloeckner.com.ar\"><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></a>",
 	        relpath, relpath);
 	fputs("</td><td><h1 id=\"repo-name\">", fp);
