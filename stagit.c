@@ -579,7 +579,7 @@ writeheader(FILE *fp, const char *title)
 void
 writefooter(FILE *fp)
 {
-	fputs("</div>\n</body>\n</html>\n", fp);
+	fputs("</div>\n</div>\n</body>\n</html>\n", fp);
 }
 
 size_t
@@ -1694,7 +1694,7 @@ main(int argc, char *argv[])
 	/* summary page with branches and tags */
 	fp = efopen("refs.html", "w");
 	writeheader(fp, "Refs");
-	fputs("<div id=\"content\">\n", fp);
+	fputs("<div id=\"content\">\n<div id=\"refs\">\n", fp);
 	writerefs(fp);
 	writefooter(fp);
 	checkfileerror(fp, "refs.html", 'w');
