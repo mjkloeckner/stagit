@@ -860,8 +860,6 @@ writelog(FILE *fp, const git_oid *oid)
 		if (cachefile)
 			writelogline(wcachefp, ci);
 
-		printf("%s\n", ci->oid);
-
 		/* check if file exists if so skip it */
 		if (r) {
 			relpath = "../";
