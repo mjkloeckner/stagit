@@ -107,11 +107,11 @@ writeheader(FILE *fp)
 	fprintf(fp, "</title>\n<link rel=\"icon\" type=\"image/png\" href=\"%sfavicon.png\" />\n", relpath);
 	fprintf(fp, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%sstyle.css\" />\n", relpath);
 	fputs("</head>\n<body>\n", fp);
-	fprintf(fp, "<table id=\"header-table\">\n<tr><td><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></td>\n"
-	        "<td><h1 id=\"main-name\">", relpath);
+	fprintf(fp, "<table id=\"main-header-table\">\n<tr><td id=\"main-header-logo\"><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></td>\n"
+	        "<td id=\"main-header\"><h1 id=\"main-name\">", relpath);
 	xmlencode(fp, description, strlen(description));
 	fputs("</h1>\n"
-		"<span class=\"main-desc\"><a href=\"https://kloeckner.com.ar/\">kloeckner.com.ar</a></span>"
+		"<span class=\"main-desc\"><a href=\"https://kloeckner.com.ar/\">https://kloeckner.com.ar</a></span>"
 		"</td></tr>\n</table>\n<div id=\"content\">\n"
 		"<table id=\"index\"><thead id=\"legends\">\n"
 		"<tr><td id=\"name\"><b>Name</b></td><td id=\"description\"><b>Description</b></td><td id=\"owner\"><b>Owner</b></td>"
@@ -122,7 +122,10 @@ writeheader(FILE *fp)
 void
 writefooter(FILE *fp)
 {
-	fputs("</tbody>\n</table>\n</div>\n</body>\n</html>\n", fp);
+	/* fputs("</tbody>\n</table>\n</div>\n</body>\n</html>\n", fp); */
+	fputs("</tbody>\n</table>\n</div>\n</body>", fp);
+	fputs("<footer>Generated with <a href=\"https://git.kloeckner.com.ar/stagit/\">Stagit</a></footer>\n", fp);
+	fputs("</html>\n", fp);
 }
 
 int

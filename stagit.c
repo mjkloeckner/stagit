@@ -540,18 +540,19 @@ writeheader(FILE *fp, const char *title)
 	xmlencode(fp, name, strlen(name));
 	fprintf(fp, " Atom Feed (tags)\" href=\"%stags.xml\" />\n", relpath);
 	fprintf(fp, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%sstyle.css\" />\n", relpath);
-	fputs("</head>\n<body>\n<table id=\"header-table\"><tr><td>", fp);
+	fputs("</head>\n<body>\n<table id=\"repo-header-table\"><tr><td id=\"repo-logo\">", fp);
 	fprintf(fp, "<a href=\"https://git.kloeckner.com.ar\"><img src=\"%slogo.png\" alt=\"\" width=\"64\" height=\"64\" /></a>",
 	        relpath, relpath);
-	fputs("</td><td><h1 id=\"repo-name\">", fp);
+	fputs("</td><td id=\"repo-header\"><h1 id=\"repo-name\">", fp);
 	xmlencode(fp, strippedname, strlen(strippedname));
-	fputs("</h1><span class=\"desc\">", fp);
+	fputs("</h1><span id=\"repo-desc\">", fp);
 	xmlencode(fp, description, strlen(description));
 	fputs("</span>", fp);
 
 	fputs("</td></tr></table>", fp);
 
 	fputs("<div id=\"repo-top-buttons\">\n", fp);
+	fprintf(fp, "<a <a href=\"https://git.kloeckner.com.ar\">Index</a>  ", relpath);
 	fprintf(fp, "<a href=\"%slog.html\">Log</a>  ", relpath);
 	fprintf(fp, "<a href=\"%sfiles.html\">Files</a>  ", relpath);
 	fprintf(fp, "<a href=\"%srefs.html\">Refs</a>", relpath);
@@ -579,7 +580,10 @@ writeheader(FILE *fp, const char *title)
 void
 writefooter(FILE *fp)
 {
-	fputs("</div>\n</div>\n</body>\n</html>\n", fp);
+	/* fputs("</div>\n</div>\n</body>\n</html>\n", fp); */
+	fputs("</div>\n</div>\n</body>\n", fp);
+	fputs("<footer>Generated with <a href=\"https://git.kloeckner.com.ar/stagit/\">Stagit</a></footer>\n", fp);
+	fputs("</html>\n", fp);
 }
 
 size_t
@@ -1151,7 +1155,11 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 		percentencode(fp, parent, strlen(parent));
 		fputs(".html\'\">", fp);
 
-		fputs("<td id=\"file-mode\">d---------</td><td><a class=\"dir\" href=\"../", fp);
+		fputs("<td id=\"file-mode\"><a href=\"../", fp);
+		xmlencode(fp, parent, strlen(parent));
+		fputs(".html\">d---------</a></td>", fp);
+
+		fputs("<td id=\"dir-name\"><a href=\"../", fp);
 		xmlencode(fp, parent, strlen(parent));
 		fputs(".html\">..</a></td>", fp);
 
