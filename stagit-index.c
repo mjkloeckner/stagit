@@ -15,7 +15,7 @@ static git_repository *repo;
 
 static const char *relpath = "";
 
-static char description[255] = "Repositories";
+static char description[255] = "Martin Klöckner's Git Repositories";
 static char *name = "";
 static char owner[255];
 
