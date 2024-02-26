@@ -1021,9 +1021,9 @@ writeblobraw(const git_blob *blob, const char *fpath, const char *filename, git_
 }
 
 size_t
-writeblob(git_object *obj, const char *fpath, const char *rpath, const char *filename, size_t filesize)
+writeblob(git_object *obj, const char *fpath, const char *rpath, const char *filename, const char *path, size_t filesize)
 {
-	char tmp[PATH_MAX] = "";
+	char tmp[PATH_MAX] = "", *file_parent;
 	const char *p, *oldrelpath;
 	int lc = 0;
 	FILE *fp;
@@ -1033,6 +1033,7 @@ writeblob(git_object *obj, const char *fpath, const char *rpath, const char *fil
 	if (strlcpy(tmp, fpath, sizeof(tmp)) >= sizeof(tmp))
 		errx(1, "path truncated: '%s'", fpath);
 
+	file_parent = strrchr(tmp, '/');
 	for (p = fpath, tmp[0] = '\0'; *p; p++) {
 		if (*p == '/' && strlcat(tmp, "../", sizeof(tmp)) >= sizeof(tmp))
 			errx(1, "path truncated: '../%s'", tmp);
@@ -1041,15 +1042,65 @@ writeblob(git_object *obj, const char *fpath, const char *rpath, const char *fil
 	oldrelpath = relpath;
 	relpath = tmp;
 
+	if (file_parent == NULL)
+		file_parent = "files";
+	else {
+		*file_parent = '\0';
+		file_parent = strrchr(tmp, '/');
+		if (file_parent == NULL)
+			file_parent = tmp;
+		else
+			++file_parent;
+	}
+
 	fp = efopen(fpath, "w");
 	writeheader(fp, filename);
 	/* fputs("<hr>\n", fp); */
 	fputs("<div id=\"content\">\n", fp);
+	fputs("<script>"
+              "function toggleLineNumbers() {"
+              "  var lines = document.querySelectorAll('.line');"
+              "  var lineCheckbox = document.getElementById('line-checkbox');"
 
-	fputs("<p id=\"openfile-name\"> ", fp);
+              "  lines.forEach(function(element) {"
+              "    if (lineCheckbox.checked) {"
+              "      element.style.display = 'inline';"
+              "    } else {"
+              "      element.style.display = 'none';"
+              "    }"
+              "  });"
+	      " localStorage.setItem('line-checkbox', lineCheckbox.checked);"
+              "}"
+	      "function setCheckboxState() {"
+	      "  var lineCheckbox = document.getElementById('line-checkbox');"
+	      "  var savedState = localStorage.getItem('line-checkbox');"
+	      "    if (savedState !== null) {"
+	      "      lineCheckbox.checked = savedState === 'true';"
+	      "      toggleLineNumbers();"
+	      "    }"
+	      "}"
+	      "document.addEventListener('DOMContentLoaded', setCheckboxState);"
+              "</script>", fp);
+
+	fputs("<div id=\"open-file-header\"><div id=\"open-file-name\"><a id=\"file-parent-path\" href=\"", fp);
+	xmlencode(fp, relpath, strlen(relpath));
+	fputs("/>", fp);
+	xmlencode(fp, path, strlen(path));
+	fputs(".html\">", fp);
+	xmlencode(fp, path, strlen(path));
+	fprintf(fp, "</a>%s", strlen(path) == 0 ? "" : "/");
 	xmlencode(fp, filename, strlen(filename));
-	fprintf(fp, " (%zuB)", filesize);
-	fprintf(fp, " - <a href=\"%s%s\">raw</a></p>", relpath, rpath);
+	fprintf(fp, " (%zuB)</div>\n\n", filesize);
+
+	fputs("<div id=\"line-checkbox-div\"><input type=\"checkbox\""
+		"id=\"line-checkbox\" onchange=\"toggleLineNumbers()\" checked>", fp);
+	fputs("<label for=\"line-checkbox\">Line numbers</label></div>", fp);
+
+	// fputs("<p id=\"openfile-name\"> ", fp);
+	// xmlencode(fp, filename, strlen(filename));
+	// fprintf(fp, " (%zuB)", filesize);
+
+	fprintf(fp, "<div id=\"file-raw\"><a href=\"%s%s\">raw</a></div></div>", relpath, rpath);
 	/* fputs("<hr>\n", fp); */
 
 	if (git_blob_is_binary((git_blob *)obj))
@@ -1287,7 +1338,7 @@ writefilestree(FILE *fp, git_tree *tree, const char *path)
 			case GIT_OBJ_BLOB:
 				is_obj_tree = 0;
 				filesize = git_blob_rawsize((git_blob *)obj);
-				lc = writeblob(obj, filepath, rawpath, entryname, filesize);
+				lc = writeblob(obj, filepath, rawpath, entryname, path, filesize);
 				writeblobraw((git_blob *)obj, rawpath, entryname, filesize);
 				break;
 			case GIT_OBJ_TREE:
