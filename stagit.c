@@ -553,7 +553,7 @@ writeheader(FILE *fp, const char *title)
 
 	fputs("<div id=\"repo-top-buttons\">\n", fp);
 	fprintf(fp, "<a <a href=\"https://git.kloeckner.com.ar\">Index</a>  ", relpath);
-	fprintf(fp, "<a href=\"%slog.html\">Log</a>  ", relpath);
+	fprintf(fp, "<a href=\"%slog.html\">Commits</a>  ", relpath);
 	fprintf(fp, "<a href=\"%sfiles.html\">Files</a>  ", relpath);
 	fprintf(fp, "<a href=\"%srefs.html\">Refs</a>", relpath);
 	if (submodules)
@@ -1618,7 +1618,7 @@ main(int argc, char *argv[])
 	fp = efopen("log.html", "w");
 	relpath = "";
 	mkdir("commit", S_IRWXU | S_IRWXG | S_IRWXO);
-	writeheader(fp, "Log");
+	writeheader(fp, "Commits");
 	fputs("<div id=\"content\">\n", fp);
 	fputs("<table id=\"log\"><thead id=\"legends\">\n<tr>"
 		  "<td id=\"log-date\"><b>Date</b></td>"
